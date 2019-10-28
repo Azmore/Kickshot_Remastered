@@ -50,6 +50,12 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 
+	//Helpers
+public:
+
+private:
+	bool LookForObjectInFront();
+
 	//Dash
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

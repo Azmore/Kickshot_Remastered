@@ -8,7 +8,12 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "TimerManager.h"
 
-//#include "Engine/Engine.h"
+#include "Engine/World.h"
+
+#include "Engine/Engine.h"
+#include "DrawDebugHelpers.h"
+
+#define print(displayText) if(GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT(displayText));
 
 // Sets default values
 AFPSControllerCPP::AFPSControllerCPP()
@@ -50,12 +55,37 @@ void AFPSControllerCPP::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 }
 
+//Looks for an object in front of the player
+bool AFPSControllerCPP::LookForObjectInFront()
+{
+	FHitResult outHit;
+
+	FVector sweepStart = GetActorLocation();
+	FVector sweepEnd = GetActorLocation();
+
+	// create a collision sphere
+	FCollisionShape myColSphere = FCollisionShape::MakeSphere(500.0f);
+
+	// draw collision sphere
+	DrawDebugSphere(GetWorld(), GetActorLocation(), myColSphere.GetSphereRadius(), 50, FColor::Purple, true);
+
+
+	GetWorld()->SweepSingleByChannel(outHit, sweepStart, sweepEnd, FQuat::Identity, ECC_WorldStatic, myColSphere);
+
+	if (outHit.GetActor()->ActorHasTag("Climbable") || outHit.GetActor()->ActorHasTag("WallRunnable")) //TODO change these strings to const variables
+	{
+		return true;
+	}
+
+	return false;
+}
+
 //Lets the player dash
 void AFPSControllerCPP::Dash()
 {
 	if (GEngine)
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT("GOT EM!"));
+		print("GOT EM!");
 	}
 
 	//Cannot dash once we reach the max dashes allowed
@@ -70,20 +100,20 @@ void AFPSControllerCPP::Dash()
 
 	if (!playerCamera)
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT("no player camera"));
+		print("no player camera");
 		return;
 	}
 
 	if (this->GetCharacterMovement()->IsFalling())
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT("is falling"));
+		print("is falling");
 
 		this->LaunchCharacter(playerCamera->GetForwardVector() * DashStrength, true, false);
 		IncreaseDashes();
 	}
 	else
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT("not falling"));
+		print("not falling");
 
 		this->GetCharacterMovement()->SetPlaneConstraintNormal(FVector(0.0f, 0.0f, 1.0f));
 		priorCharacterLocation = GetActorLocation();
@@ -96,7 +126,7 @@ void AFPSControllerCPP::Dash()
 
 void AFPSControllerCPP::onDashTimerEnd1()
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT("Timer 1 is up!"));
+	//print("Timer 1 is up!");
 
 	if (!UKismetMathLibrary::EqualEqual_VectorVector(GetActorLocation(), priorCharacterLocation, 0.000001f))
 	{
@@ -114,19 +144,16 @@ void AFPSControllerCPP::IncreaseDashes()
 
 void AFPSControllerCPP::onDashTimerEnd2()
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT("Timer 2 is up!"));
+	//print("Timer 2 is up!");
 
-	bool objinfront = false;
-
-	if (objinfront) //object is in front
+	if (LookForObjectInFront()) //object is in front
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT("Hello! TRUE"));
-
+		print("Hello! TRUE");
 	}
 	else
 	{
 		this->GetCharacterMovement()->Velocity = FVector(0.0f, 0.0f, 0.0f);
-		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT("VELOCITY SET TO ZERO"));
+		print("VELOCITY SET TO ZERO");
 	}
 
 	this->GetCharacterMovement()->SetPlaneConstraintNormal(FVector(0.0f, 0.0f, 0.0f));
@@ -137,7 +164,7 @@ void AFPSControllerCPP::onDashTimerEnd2()
 
 void AFPSControllerCPP::onDashTimerEnd3()
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT("Dash resetting!"));
+	//print("Dash resetting!");
 
 	CanDash = true;
 }
