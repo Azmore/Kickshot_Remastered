@@ -6,8 +6,8 @@ public class rtikEditor : ModuleRules
 {
 	public rtikEditor(ReadOnlyTargetRules Target) : base(Target)
 	{
-		// PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-
+        // PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+        PrivatePCHHeaderFile = "rtik.h";
 
         PublicDependencyModuleNames.AddRange(new string[] { "rtik", "Core", "CoreUObject", "Engine", "InputCore" , "UnrealEd" });
 
